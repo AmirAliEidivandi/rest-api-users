@@ -1,18 +1,14 @@
 const mongoose = require("mongoose");
-const { MONGO_DB, MONGO_HOST, MONGO_PORT } = process.env;
+const logger = require("../middlewares/error.winston");
 
-mongoose.connection.on("error", (error) => {
-    console.log("mongodb connected failed!", error.message);
-});
-
-const connectionDB = () => {
-    mongoose
-        .connect(`mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}`, {
+const connectionDB = async (url) => {
+    await mongoose
+        .connect(url, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         })
-        .then(() => console.log("connected to db"))
-        .catch((err) => console.log(err));
+        .then(() => logger.info("connected to db"))
+        .catch((err) => logger.error(err));
 };
 
 module.exports = connectionDB;

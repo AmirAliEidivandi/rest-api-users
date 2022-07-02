@@ -5,7 +5,8 @@
     ],
     "ext": "js",
     "ignore": [
-        "*.spec.js"
+        "*.spec.js",
+        "*.test.js"
     ],
     "exec": "node server.js"
 }

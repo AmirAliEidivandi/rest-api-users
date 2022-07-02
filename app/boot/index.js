@@ -1,3 +1,7 @@
-const startDB = require('./db');
+const connectDB = require("./db");
 
-startDB()
+const startDB = async () => {
+    await connectDB(process.env.MONGO_URI);
+};
+
+startDB();
