@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
     mobile: {
         type: String,
         required: true,
-        maxlength: 12
+        maxlength: 12,
     },
     email: String,
     wallet: { type: Number, default: 0 },

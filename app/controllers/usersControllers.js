@@ -1,8 +1,18 @@
 const UserModle = require("../models/UsersModel");
 
 const usersList = async (req, res, next) => {
+    let projection = {};
+    if (req.query.hasOwnProperty("fields")) {
+        projection = req.query.fields.split(",").reduce((tt, cur) => {
+            return {
+                [cur]: 1,
+                ...tt,
+            };
+        }, {});
+    }
+
     try {
-        const findUsers = await UserModle.find({});
+        const findUsers = await UserModle.find({}, projection);
         res.status(200).send(findUsers);
     } catch (error) {
         next(error);
@@ -29,6 +39,7 @@ const addUser = async (req, res, next) => {
         res.status(201).send({
             success: true,
             message: "create successfully!",
+            newUser,
         });
     } catch (error) {
         next(error);
