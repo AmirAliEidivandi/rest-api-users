@@ -1,9 +1,7 @@
 const UserModle = require("../models/UsersModel");
 const asyncWrapper = require("../middlewares/async");
-const JWT = require("jsonwebtoken");
-const { validationResult } = require("express-validator");
-const bcrypt = require("bcrypt");
 
+// get users
 const usersList = asyncWrapper(async (req, res, next) => {
     let projection = {};
     if (req.query.hasOwnProperty("fields")) {
@@ -19,48 +17,84 @@ const usersList = asyncWrapper(async (req, res, next) => {
     res.status(200).send(findUsers);
 });
 
-const addUser = asyncWrapper(async (req, res, next) => {
-    const { firstName, lastName, mobile, email, password } = req.body;
-
-    const oldUser = await UserModle.findOne({ email });
-    oldUser && res.status(422).json({ message: "already user exists" });
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    if (!firstName || !lastName) {
-        res.status(422).send({
+// get user
+const getUser = asyncWrapper(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) {
+        return res.status(404).send({
             error: true,
-            message: "firstName and lastName not validation",
+            message: "user not found...",
         });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await UserModle.findOne({
+        _id: id,
+    });
+    if (!user) {
+        return res.status(404).send({
+            error: true,
+            message: "user not found...",
+        });
+    }
+
+    res.status(200).send({
+        success: true,
+        data: {
+            user,
+        },
+    });
+});
+
+// add users
+const addUser = asyncWrapper(async (req, res, next) => {
+    const { firstName, lastName, mobile, email } = req.body;
+
+    if (!firstName && !lastName) {
+        res.status(422).send({
+            error: true,
+            message: "bad request",
+        });
+    }
 
     const newUser = new UserModle({
         firstName,
         lastName,
         mobile,
         email,
-        password: hashedPassword,
     });
     await newUser.save();
-
-    const token = JWT.sign({ email: newUser.email }, process.env.SECRET_TOKEN_SIGN, { expiresIn: "5d" });
 
     res.status(201).send({
         success: true,
         message: "create successfully!",
         newUser,
-        token,
     });
 });
 
-const updateUser = asyncWrapper(async (req, res, next) => {
+const removeUser = asyncWrapper(async (req, res, next) => {
     const { id } = req.params;
-    // const { email } = req.body;
+    if (!id) {
+        return res.status(404).send({
+            error: true,
+            message: "user not found...",
+        });
+    }
+
+    await UserModle.findOneAndDelete(id);
+    res.status(200).send({
+        success: true,
+        message: "user has been deleted...",
+    });
+});
+
+const updateUserPut = asyncWrapper(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) {
+        return res.status(404).send({
+            error: true,
+            message: "user not found...",
+        });
+    }
 
     const user = await UserModle.findByIdAndUpdate(
         id,
@@ -72,14 +106,48 @@ const updateUser = asyncWrapper(async (req, res, next) => {
             runValidators: true,
         }
     );
+    res.status(200).send({
+        success: true,
+        message: "user updated...",
+        data: {
+            user,
+        },
+    });
+});
 
-    const token = JWT.sign({ email: user.email }, process.env.SECRET_TOKEN_REFRESH, { expiresIn: "5d" });
+const updateUserPatch = asyncWrapper(async (req, res, next) => {
+    const { id } = req.params;
+    if (!id) {
+        return res.status(404).send({
+            error: true,
+            message: "user not found...",
+        });
+    }
 
-    res.status(200).json({ user, token });
+    const { n, nModified } = await UserModle.updateOne(
+        {
+            _id: id,
+        },
+        {
+            ...req.body,
+        }
+    );
+
+    if (n === 0 || nModified === 0) {
+        throw new Error("The update operation encountered an error");
+    }
+
+    res.status(200).send({
+        success: true,
+        message: "user has been updated...",
+    });
 });
 
 module.exports = {
     usersList,
     addUser,
-    updateUser
+    getUser,
+    removeUser,
+    updateUserPut,
+    updateUserPatch,
 };

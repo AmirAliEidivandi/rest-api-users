@@ -1,10 +1,7 @@
-const express = require("express");
-const router = express.Router();
-const { usersList, addUser, updateUser } = require("../controllers/usersControllers");
-const { check } = require("express-validator");
+const router = require("express").Router();
+const { usersList, addUser, getUser, removeUser, updateUserPatch, updateUserPut } = require("../controllers/usersControllers");
 
-router.get("/", usersList);
-router.post("/", [check("email", "invalid email").isEmail(), check("password", "invalid password").isLength({ min: 6 }).exists()], addUser);
-router.put("/:id", updateUser);
+router.route("/").get(usersList).post(addUser);
+router.route("/:id").get(getUser).delete(removeUser).put(updateUserPut).patch(updateUserPatch);
 
 module.exports = router;
