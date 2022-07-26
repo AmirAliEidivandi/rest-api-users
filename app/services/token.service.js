@@ -1,24 +1,42 @@
-const jwt = require("jsonwebtoken");
+const JWT = require("jsonwebtoken");
 
-const sign = (data) => {
-    return jwt.sign(data, process.env.APP_SECRET);
-};
+const verifyToken = (req, res, next) => {
+    const authHeader = req.headers.token;
 
-const verify = (token) => {
-    try {
-        const payload = jwt.verify(token, process.env.APP_SECRET);
-        return payload;
-    } catch (error) {
-        return false;
+    if (authHeader) {
+        const token = authHeader.split(" ")[1];
+        JWT.verify(token, process.env.JWT_SEC, (err, user) => {
+            if (err) res.status(403).json("Token is not valid!");
+            req.user = user;
+            next();
+        });
+    } else {
+        return res.status(401).json("You are not authenticated!");
     }
 };
 
-const decode = (token) => {
-    return jwt.decode(token, process.env.APP_SECRET);
+const verifyTokenAndAuthorization = (req, res, next) => {
+    verifyToken(req, res, () => {
+        if (req.user.id === req.params.id || req.user.isAdmin) {
+            next();
+        } else {
+            res.status(403).json("You are not alowed to do that!");
+        }
+    });
+};
+
+const verifyTokenAndAdmin = (req, res, next) => {
+    verifyToken(req, res, () => {
+        if (req.user.isAdmin) {
+            next();
+        } else {
+            res.status(403).json("You are not alowed to do that!");
+        }
+    });
 };
 
 module.exports = {
-    sign,
-    verify,
-    decode,
+    verifyToken,
+    verifyTokenAndAuthorization,
+    verifyTokenAndAdmin,
 };
