@@ -1,4 +1,5 @@
 require("dotenv").config();
 const bootApplication = require("./app/index");
 
-bootApplication(process.env.APP_PORT);
+const PORT = process.env.PORT || 8080;
+bootApplication(PORT);
