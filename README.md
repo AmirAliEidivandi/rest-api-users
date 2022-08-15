@@ -1,3 +1,3 @@
 # rest-api-users
 
-https://boiling-sands-81350.herokuapp.com/api/v1/users
+https://rest-api-users46.herokuapp.com/api/v1/users
